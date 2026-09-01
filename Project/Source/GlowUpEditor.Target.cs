@@ -10,6 +10,6 @@ public class GlowUpEditorTarget : TargetRules
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V7;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_8;
-		ExtraModuleNames.Add("GlowUp");
+		ExtraModuleNames.AddRange(new string[] { "GlowUp", "GlowUI" });
 	}
 }

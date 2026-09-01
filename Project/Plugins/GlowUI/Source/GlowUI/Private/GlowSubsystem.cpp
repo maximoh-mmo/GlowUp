@@ -36,6 +36,10 @@ void UGlowSubsystem::RegisterGlowWidget(UWidget* Widget, UMaterialInstanceDynami
     {
         RegisteredGlowSources.Add(Widget, CachedDMI);
     }
+    else
+    {
+        return;
+    }
     
     EnsurePostProcessComponent();
 
@@ -43,8 +47,6 @@ void UGlowSubsystem::RegisterGlowWidget(UWidget* Widget, UMaterialInstanceDynami
     {
         PostProcessComponent->AddOrUpdateBlendable(CachedDMI, 1.0f);
     }
-
-    RegisteredGlowSources.Add(Widget, CachedDMI);
 }
 
 void UGlowSubsystem::UnregisterGlowWidget(UWidget* Widget)
