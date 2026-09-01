@@ -110,10 +110,13 @@
   - **Exit check:** the glow box now appears at the widget's actual on-screen position instead of a hardcoded one.
 
 - [ ] **Session 3 (~5 hrs):** Stress-test tracking robustness
-  1. Add simple runtime movement/resizing to the test widget (a Timeline animating its Canvas Panel Slot position or size) — confirm the glow box tracks it live, without lag or misalignment.
-  2. Test at different window sizes/resolutions (resize the PIE window, try a couple of fixed resolutions) to validate the DPI-scale handling actually holds up rather than just working at your default test resolution.
-  3. Log any drift, misalignment, or edge cases found — this is exactly the kind of empirical finding worth feeding back into §3.1 before Week 3 builds the real `GlowSubsystem` on top of this mechanism.
-  - **Exit check:** a moving/resizing widget with the glow box tracking it correctly across at least two different window resolutions.
+  0. **Cleanup first:** replace the Session 2 Delay-based initialization workaround with a proper guard — IsValid check on `GlowDMI` at the top of Tick, skip the update that frame if not yet valid, rather than relying on a fixed delay (removes a frame-rate/load-dependent race).
+  1. Add real movement/resizing via a UMG **Widget Animation** — **use an Offsets (LayoutData) track, not Render Transform**. Found during testing: Render Transform-driven Translation/Scale desyncs from the geometry-sync tracking (cached geometry reflects layout, not the separate visual paint transform) — logged as an open item in §3.1/milestone 1i, not something to solve in this session. Offsets-driven animation is a valid, confirmed-working test of the core mechanism.
+  2. Re-run the bordered-widget comparison from Session 2 with the animation playing — confirm smooth tracking through the whole movement, not just a static frame.
+  3. Re-test at a non-default **UI Scale** (Project Settings → User Interface) and at least one more window resolution.
+  4. Specifically check screen edges/corners during the animation — most likely place for the mask-clamping logic to reveal an off-by-one or clamping bug that a centered test wouldn't catch.
+  5. Log any drift/misalignment found, where, and whether resolved — feeds directly into §3.1 before Week 3 builds `GlowSubsystem` on this mechanism.
+  - **Exit check:** a moving/resizing widget with the glow box tracking it correctly across at least two different window resolutions/scales, including near screen edges.
 
 **Week 2 exit condition:** a real UMG widget, moved and resized live, with the glow rectangle correctly following it — validated across more than one resolution. This is the mechanism the whole `GlowContainer`/`GlowSubsystem` design in §4 depends on, so don't move to Week 3 until this is genuinely solid, not just "looked fine once."
 
@@ -129,3 +132,5 @@
 - *Corrected Session 2 step 6: RT can't be hardcoded into the PP Volume's material array (dynamic asset, same as Session 1). Add Or Update Blendable is exposed on Post Process Component, not the Post Process Volume actor — added component to BP_GlowRig instead.*
 - *Week 1 marked complete — exit condition achieved (intensity-driven glowing quad with real bloom response). Additional findings logged: DMI parameter snapshotting, PP Component blend weight, Custom HLSL float4 requirement.*
 - *Week 2 planned: geometry-sync spike (1b) + Slate reading (1c), broken into three sessions.*
+- *Week 2 Session 3 fleshed out: Delay-hack cleanup, Widget Animation-driven movement/resize test, multi-resolution/edge-case validation.*
+- *Found: geometry sync tracks layout-driven (Offsets) changes correctly but not Render Transform-driven Translation/Scale. Logged as known limitation in roadmap §3.1 and follow-up task 1i in milestones; Session 3 test switched to Offsets-based animation.*

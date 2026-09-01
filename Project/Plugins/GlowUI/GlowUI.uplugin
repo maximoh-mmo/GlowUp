@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "GlowUI",
+	"Description": "Glow Up - True Emissive UI Materials",
+	"Category": "Other",
+	"CreatedBy": "Max Heinze",
+	"CreatedByURL": "https://maxheinze.com",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "GlowUI",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
