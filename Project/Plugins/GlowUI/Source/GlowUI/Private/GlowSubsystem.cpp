@@ -4,9 +4,9 @@
 #include "Components/Widget.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
+#include "Blueprint/SlateBlueprintLibrary.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
-#include "Slate/SlateBrushAsset.h" // adjust include as needed for AbsoluteToViewport equivalent
 
 void UGlowSubsystem::Tick(float DeltaTime)
 {
@@ -17,7 +17,7 @@ void UGlowSubsystem::Tick(float DeltaTime)
 
         if (!Widget || !DMI)
         {
-            It.RemoveCurrent(); // widget or DMI went stale — clean up rather than crash
+            It.RemoveCurrent();
             continue;
         }
 
@@ -40,7 +40,7 @@ void UGlowSubsystem::RegisterGlowWidget(UWidget* Widget, UMaterialInstanceDynami
     {
         return;
     }
-    
+
     EnsurePostProcessComponent();
 
     if (PostProcessComponent)
@@ -59,8 +59,6 @@ FVector2D UGlowSubsystem::ScaleCornerAroundPivot(
     const FVector2D& PivotLocal,
     const FVector2D& Scale)
 {
-    // Validated against Week 2 log data:
-    // ScaledCorner = PivotLocal + (LocalCorner - PivotLocal) * Scale
     return PivotLocal + (LocalCorner - PivotLocal) * Scale;
 }
 
@@ -68,14 +66,10 @@ void UGlowSubsystem::UpdateGlowSource(UWidget* Widget, UMaterialInstanceDynamic*
 {
     const FGeometry& Geometry = Widget->GetCachedGeometry();
 
-    const FVector2D LocalTopLeft = Geometry.GetLocalPositionAtCoordinates(FVector2D(0, 0));
+    const FVector2D LocalTopLeft = Geometry.GetLocalTopLeft();
     const FVector2D LocalSize = Geometry.GetLocalSize();
     const FVector2D LocalBottomRight = LocalTopLeft + LocalSize;
 
-    // TODO: read actual RenderTransform pivot/scale from the widget once
-    // Render Transform support (task 1i) is implemented — hardcoded
-    // identity for now, matching current Blueprint-validated behavior
-    // for layout-driven (Offsets) tracking.
     const FVector2D PivotNormalized(0.5f, 0.5f);
     const FVector2D PivotLocal = LocalTopLeft + PivotNormalized * LocalSize;
     const FVector2D Scale(1.0f, 1.0f);
@@ -86,12 +80,18 @@ void UGlowSubsystem::UpdateGlowSource(UWidget* Widget, UMaterialInstanceDynamic*
     const FVector2D AbsMin = Geometry.LocalToAbsolute(ScaledTopLeft);
     const FVector2D AbsMax = Geometry.LocalToAbsolute(ScaledBottomRight);
 
-    // TODO: AbsoluteToViewport conversion + divide by Get Viewport Size,
-    // per the Session 2 chain — the Pixel Position vs Viewport Position
-    // distinction from earlier still applies here.
+    FVector2D ViewportMin = AbsMin;
+    FVector2D ViewportMax = AbsMax;
+
+    if (UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr)
+    {
+        ViewportMin = USlateBlueprintLibrary::AbsoluteToViewport(World, AbsMin);
+        ViewportMax = USlateBlueprintLibrary::AbsoluteToViewport(World, AbsMax);
+    }
+
     const FVector2D ViewportSize = UWidgetLayoutLibrary::GetViewportSize(Widget);
-    const FVector2D RectMin = AbsMin / ViewportSize; // placeholder — confirm against AbsoluteToViewport first
-    const FVector2D RectMax = AbsMax / ViewportSize;
+    const FVector2D RectMin = ViewportSize.X > 0.f ? ViewportMin / ViewportSize : FVector2D::ZeroVector;
+    const FVector2D RectMax = ViewportSize.Y > 0.f ? ViewportMax / ViewportSize : FVector2D::ZeroVector;
 
     DMI->SetVectorParameterValue(TEXT("RectMin"), FLinearColor(RectMin.X, RectMin.Y, 0, 0));
     DMI->SetVectorParameterValue(TEXT("RectMax"), FLinearColor(RectMax.X, RectMax.Y, 0, 0));
@@ -103,7 +103,7 @@ void UGlowSubsystem::EnsurePostProcessComponent()
     {
         return;
     }
-    
+
     UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
     if (!World)
     {

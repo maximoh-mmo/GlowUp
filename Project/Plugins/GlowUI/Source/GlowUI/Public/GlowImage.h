@@ -10,7 +10,7 @@
  * 
  */
 
-DECLARE_LOG_CATEGORY_EXTERN(LogGlowImage, Warning, Display)
+DECLARE_LOG_CATEGORY_EXTERN(LogGlowImage, Display,Log)
 UCLASS()
 class GLOWUI_API UGlowImage : public UImage
 {
@@ -31,9 +31,13 @@ public:
 	TObjectPtr<UMaterialInterface> GlowMaterialParent;
 	
 protected:
+	// Primary initialization — call from Blueprint or automatically from OnInitialized/RebuildWidget
+	UFUNCTION(BlueprintCallable, Category = "Glow")
+	void InitializeGlow();
+	
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
-	
+	virtual void OnInitialized() override;
 private:
 	void RegisterWithSubsystem();
 	
