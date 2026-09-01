@@ -37,7 +37,7 @@ protected:
 	
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
-	virtual void OnInitialized() override;
+	virtual void OnInitialized();
 private:
 	void RegisterWithSubsystem();
 	

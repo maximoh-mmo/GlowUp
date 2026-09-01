@@ -66,7 +66,7 @@ void UGlowSubsystem::UpdateGlowSource(UWidget* Widget, UMaterialInstanceDynamic*
 {
     const FGeometry& Geometry = Widget->GetCachedGeometry();
 
-    const FVector2D LocalTopLeft = Geometry.GetLocalTopLeft();
+    const FVector2D LocalTopLeft = Geometry.GetLocalPositionAtCoordinates(FVector2D(0, 0));
     const FVector2D LocalSize = Geometry.GetLocalSize();
     const FVector2D LocalBottomRight = LocalTopLeft + LocalSize;
 
@@ -85,8 +85,9 @@ void UGlowSubsystem::UpdateGlowSource(UWidget* Widget, UMaterialInstanceDynamic*
 
     if (UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr)
     {
-        ViewportMin = USlateBlueprintLibrary::AbsoluteToViewport(World, AbsMin);
-        ViewportMax = USlateBlueprintLibrary::AbsoluteToViewport(World, AbsMax);
+        FVector2D PixelMin, PixelMax;
+        USlateBlueprintLibrary::AbsoluteToViewport(World, AbsMin, PixelMin, ViewportMin);
+        USlateBlueprintLibrary::AbsoluteToViewport(World, AbsMax, PixelMax, ViewportMax);
     }
 
     const FVector2D ViewportSize = UWidgetLayoutLibrary::GetViewportSize(Widget);
