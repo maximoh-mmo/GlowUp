@@ -1,6 +1,8 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "GlowSubsystem.h"
+
+#include "GlowImage.h"
 #include "Components/Widget.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
@@ -54,48 +56,39 @@ void UGlowSubsystem::UnregisterGlowWidget(UWidget* Widget)
     RegisteredGlowSources.Remove(Widget);
 }
 
-FVector2D UGlowSubsystem::ScaleCornerAroundPivot(
-    const FVector2D& LocalCorner,
-    const FVector2D& PivotLocal,
-    const FVector2D& Scale)
-{
-    return PivotLocal + (LocalCorner - PivotLocal) * Scale;
-}
-
-void UGlowSubsystem::UpdateGlowSource(UWidget* Widget, UMaterialInstanceDynamic* DMI)
+void UGlowSubsystem::UpdateGlowSource(UWidget* Widget, UMaterialInstanceDynamic* DMI) const
 {
     const FGeometry& Geometry = Widget->GetCachedGeometry();
-
-    const FVector2D LocalTopLeft = Geometry.GetLocalPositionAtCoordinates(FVector2D(0, 0));
-    const FVector2D LocalSize = Geometry.GetLocalSize();
-    const FVector2D LocalBottomRight = LocalTopLeft + LocalSize;
-
-    const FVector2D PivotNormalized(0.5f, 0.5f);
-    const FVector2D PivotLocal = LocalTopLeft + PivotNormalized * LocalSize;
-    const FVector2D Scale(1.0f, 1.0f);
-
-    const FVector2D ScaledTopLeft = ScaleCornerAroundPivot(LocalTopLeft, PivotLocal, Scale);
-    const FVector2D ScaledBottomRight = ScaleCornerAroundPivot(LocalBottomRight, PivotLocal, Scale);
-
-    const FVector2D AbsMin = Geometry.LocalToAbsolute(ScaledTopLeft);
-    const FVector2D AbsMax = Geometry.LocalToAbsolute(ScaledBottomRight);
-
-    FVector2D ViewportMin = AbsMin;
-    FVector2D ViewportMax = AbsMax;
-
+    
+    
+    const FVector2D AbsoluteCorners[4] = {
+        Geometry.GetAbsolutePosition(),
+        Geometry.GetAbsolutePositionAtCoordinates(FVector2D(0,1)),
+        Geometry.GetAbsolutePositionAtCoordinates(FVector2D(1,0)),
+        Geometry.GetAbsolutePositionAtCoordinates(FVector2D(1,1))
+    };
+    
     if (UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr)
     {
-        FVector2D PixelMin, PixelMax;
-        USlateBlueprintLibrary::AbsoluteToViewport(World, AbsMin, PixelMin, ViewportMin);
-        USlateBlueprintLibrary::AbsoluteToViewport(World, AbsMax, PixelMax, ViewportMax);
+        const float ViewportScale = UWidgetLayoutLibrary::GetViewportScale(Widget);
+        const FVector2D ViewportSize = UWidgetLayoutLibrary::GetViewportSize(Widget);
+        FVector2D MaterialUV[4];
+        for (int32 i = 0; i < 4; ++i)
+        {
+            const FVector2D AbsPoint = AbsoluteCorners[i];
+
+            FVector2D PixelPoint, ViewportPoint;
+            USlateBlueprintLibrary::AbsoluteToViewport(World, AbsPoint, PixelPoint, ViewportPoint);
+            MaterialUV[i] = (ViewportSize.X > 0.f && ViewportSize.Y > 0.f)
+                ? ViewportScale * (ViewportPoint / ViewportSize)
+                : FVector2D::ZeroVector;
+        }
+        
+        DMI->SetVectorParameterValue(TEXT("QuadCorner0"), FLinearColor(MaterialUV[0].X, MaterialUV[0].Y, 0, 0));
+        DMI->SetVectorParameterValue(TEXT("QuadCorner1"), FLinearColor(MaterialUV[1].X, MaterialUV[1].Y, 0, 0));
+        DMI->SetVectorParameterValue(TEXT("QuadCorner2"), FLinearColor(MaterialUV[2].X, MaterialUV[2].Y, 0, 0));
+        DMI->SetVectorParameterValue(TEXT("QuadCorner3"), FLinearColor(MaterialUV[3].X, MaterialUV[3].Y, 0, 0));
     }
-
-    const FVector2D ViewportSize = UWidgetLayoutLibrary::GetViewportSize(Widget);
-    const FVector2D RectMin = ViewportSize.X > 0.f ? ViewportMin / ViewportSize : FVector2D::ZeroVector;
-    const FVector2D RectMax = ViewportSize.Y > 0.f ? ViewportMax / ViewportSize : FVector2D::ZeroVector;
-
-    DMI->SetVectorParameterValue(TEXT("RectMin"), FLinearColor(RectMin.X, RectMin.Y, 0, 0));
-    DMI->SetVectorParameterValue(TEXT("RectMax"), FLinearColor(RectMax.X, RectMax.Y, 0, 0));
 }
 
 void UGlowSubsystem::EnsurePostProcessComponent()

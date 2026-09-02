@@ -27,14 +27,7 @@ public:
 	void UnregisterGlowWidget(UWidget* Widget);
 
 private:
-	// Pivot-relative scaled corner — matches the formula validated
-	// against the Week 2 Blueprint log data.
-	static FVector2D ScaleCornerAroundPivot(
-		const FVector2D& LocalCorner,
-		const FVector2D& PivotLocal,
-		const FVector2D& Scale);
-
-	void UpdateGlowSource(UWidget* Widget, UMaterialInstanceDynamic* DMI);
+	void UpdateGlowSource(UWidget* Widget, UMaterialInstanceDynamic* DMI) const;
 
 	UPROPERTY()
 	TObjectPtr<AActor> GlowRigActor;
