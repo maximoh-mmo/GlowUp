@@ -109,14 +109,14 @@
   6. Each tick, call **Set Vector Parameter Value** on your existing dynamic material instance to push the computed `RectMin`/`RectMax`, replacing Week 1's hardcoded constants.
   - **Exit check:** the glow box now appears at the widget's actual on-screen position instead of a hardcoded one.
 
-- [ ] **Session 3 (~5 hrs):** Stress-test tracking robustness
+- [x] **Session 3 (~5 hrs):** Stress-test tracking robustness
   0. **Cleanup first:** replace the Session 2 Delay-based initialization workaround with a proper guard — IsValid check on `GlowDMI` at the top of Tick, skip the update that frame if not yet valid, rather than relying on a fixed delay (removes a frame-rate/load-dependent race).
   1. Add real movement/resizing via a UMG **Widget Animation** — **use an Offsets (LayoutData) track, not Render Transform**. Found during testing: Render Transform-driven Translation/Scale desyncs from the geometry-sync tracking (cached geometry reflects layout, not the separate visual paint transform) — logged as an open item in §3.1/milestone 1i, not something to solve in this session. Offsets-driven animation is a valid, confirmed-working test of the core mechanism.
   2. Re-run the bordered-widget comparison from Session 2 with the animation playing — confirm smooth tracking through the whole movement, not just a static frame.
   3. Re-test at a non-default **UI Scale** (Project Settings → User Interface) and at least one more window resolution.
   4. Specifically check screen edges/corners during the animation — most likely place for the mask-clamping logic to reveal an off-by-one or clamping bug that a centered test wouldn't catch.
   5. Log any drift/misalignment found, where, and whether resolved — feeds directly into §3.1 before Week 3 builds `GlowSubsystem` on this mechanism.
-  - **Exit check:** a moving/resizing widget with the glow box tracking it correctly across at least two different window resolutions/scales, including near screen edges.
+  - **Exit check:** a moving/resizing widget with the glow box tracking it correctly across at least two different window resolutions/scales, including near screen edges. ✅ Achieved.
 
 **Week 2 exit condition:** a real UMG widget, moved and resized live, with the glow rectangle correctly following it — validated across more than one resolution. This is the mechanism the whole `GlowContainer`/`GlowSubsystem` design in §4 depends on, so don't move to Week 3 until this is genuinely solid, not just "looked fine once."
 
@@ -134,3 +134,4 @@
 - *Week 2 planned: geometry-sync spike (1b) + Slate reading (1c), broken into three sessions.*
 - *Week 2 Session 3 fleshed out: Delay-hack cleanup, Widget Animation-driven movement/resize test, multi-resolution/edge-case validation.*
 - *Found: geometry sync tracks layout-driven (Offsets) changes correctly but not Render Transform-driven Translation/Scale. Logged as known limitation in roadmap §3.1 and follow-up task 1i in milestones; Session 3 test switched to Offsets-based animation.*
+- *Week 2 Session 3 completed: stress-test tracking robustness passed with movement/resizing animation, multiple window resolutions, and DPI-scale validation. Exit condition achieved: glow box tracks moving/resizing widget correctly across at least two different window resolutions/scales.*
