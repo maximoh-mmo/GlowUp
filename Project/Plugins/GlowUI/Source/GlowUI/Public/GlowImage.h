@@ -6,10 +6,11 @@
 #include "Components/Image.h"
 #include "GlowImage.generated.h"
 
+class USlateBrushAsset;
+
 /**
  * 
  */
-
 DECLARE_LOG_CATEGORY_EXTERN(LogGlowImage, Display,Log)
 UCLASS()
 class GLOWUI_API UGlowImage : public UImage
@@ -17,28 +18,29 @@ class GLOWUI_API UGlowImage : public UImage
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Glow")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Appearance|Glow" )
 	FLinearColor GlowColor = FLinearColor::White;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Glow")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Appearance|Glow" )
 	float GlowIntensity = 1.0f;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Glow")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Appearance|Glow" )
 	bool bGlowEnabled = true;
 	
-	// Assign your validated PP material asset here or set a project default later
-	UPROPERTY(EditAnywhere, Category = "Glow")
+	UPROPERTY(EditAnywhere, Category = "Appearance|Glow" )
 	TObjectPtr<UMaterialInterface> GlowMaterialParent;
+
 	
 protected:
 	// Primary initialization — call from Blueprint or automatically from OnInitialized/RebuildWidget
-	UFUNCTION(BlueprintCallable, Category = "Glow")
+	UFUNCTION(BlueprintCallable, Category = "Appearance|Glow" )
 	void InitializeGlow();
 	
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
 private:
 	void RegisterWithSubsystem();
+	void EnsureBrushConstraints();
 	
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> GlowDMI;
